@@ -3,10 +3,14 @@ console.log('Source extractor bootstrapped ...waiting for page to load');
 document.addEventListener('DOMContentLoaded', (e) => {
     console.log('Getting video source ...');
     const mediaSrc = extractSource(document);
-    
+    const nextLink = extractNextLink(document);
+
     console.log('Creating iframe ...');
     const newRoot = document.createElement('html');
+    
     newRoot.appendChild(createIFrame(mediaSrc));
+    newRoot.appendChild(createControls(nextLink));
+    
     document.replaceChild(newRoot, document.children[0]);
 
     // TODO: validate if process completed successfully.
@@ -35,4 +39,29 @@ function createIFrame(videoSrc) {
     iFrame.setAttribute('height', 405);
     
     return iFrame;
+}
+
+function extractNextLink(document) {
+    return document.querySelector("a.novae");
+}
+
+function createNextAnchor(nextLink) {
+    const anchor = document.createElement('a');
+    
+    anchor.setAttribute('href', nextLink);
+    anchor.innerText = 'Next Media Source';
+    
+    return anchor;
+}
+
+function createControls(nextLink) {
+    const anchorWrapper = document.createElement('div');
+
+    if (nextLink) {
+        anchorWrapper.appendChild(createNextAnchor(nextLink));
+    } else {
+        anchorWrapper.appendChild(document.createTextNode('No New Source'))
+    }
+
+    return anchorWrapper;
 }
