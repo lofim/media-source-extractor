@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Media Source Extractor",
-  "version": "1.1",
+  "version": "1.2",
   "description": "Extracts media source into a clean iframe",
   "content_scripts": [
     {

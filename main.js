@@ -3,13 +3,13 @@ console.log('Source extractor bootstrapped ...waiting for page to load');
 document.addEventListener('DOMContentLoaded', (e) => {
     console.log('Getting video source ...');
     const mediaSrc = extractSource(document);
-    const nextLink = extractNextLink(document);
+    const nextLink = extractLink(document, 'a.novae');
+    const prevLink = extractLink(document, 'a.stare');
 
-    console.log('Creating iframe ...');
     const newRoot = document.createElement('html');
     
     newRoot.appendChild(createIFrame(mediaSrc));
-    newRoot.appendChild(createControls(nextLink));
+    newRoot.appendChild(createControls(prevLink, nextLink));
     
     document.replaceChild(newRoot, document.children[0]);
 
@@ -19,10 +19,7 @@ document.addEventListener('DOMContentLoaded', (e) => {
 
 function extractSource(doc) {
     const encodedMediaSrc = doc.getElementById('iframe_1').dataset.src;
-    console.log('Encoded video src: ', encodedMediaSrc);
-
     const mediaSrc = atob(encodedMediaSrc);
-    console.log('Decoded video src: ', mediaSrc);
 
     return mediaSrc;
 }
@@ -41,27 +38,36 @@ function createIFrame(videoSrc) {
     return iFrame;
 }
 
-function extractNextLink(document) {
-    return document.querySelector("a.novae");
+function extractLink(document, query) {
+    return document.querySelector(query);
 }
 
-function createNextAnchor(nextLink) {
+function createAnchor(nextLink, label) {
     const anchor = document.createElement('a');
     
     anchor.setAttribute('href', nextLink);
-    anchor.innerText = 'Next Media Source';
+    anchor.setAttribute('style', 'margin-right: 20px;');
+    anchor.innerText = label;
     
     return anchor;
 }
 
-function createControls(nextLink) {
+function createControls(prevLink, nextLink) {
     const anchorWrapper = document.createElement('div');
+   
+    if (prevLink) {
+        anchorWrapper.appendChild(createAnchor(prevLink, 'Prev media source'));
+    }
 
     if (nextLink) {
-        anchorWrapper.appendChild(createNextAnchor(nextLink));
-    } else {
-        anchorWrapper.appendChild(document.createTextNode('No New Source'))
+        anchorWrapper.appendChild(createAnchor(nextLink, 'Next media source'));
+    } 
+
+    if(!prevLink && !nextLink) {
+        anchorWrapper.appendChild(document.createTextNode('No Old or New Sources'))
     }
+
+    console.log('controls done');
 
     return anchorWrapper;
 }
