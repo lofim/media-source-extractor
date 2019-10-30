@@ -2,26 +2,41 @@ console.log('Source extractor bootstrapped ...waiting for page to load');
 
 document.addEventListener('DOMContentLoaded', (e) => {
     console.log('Getting video source ...');
-    const mediaSrc = extractSource(document);
+
+    const originalDocument = document.children[0];
+    const mediaSources = extractSources(document);
+
+    // Nav bar at the bottom
     const nextLink = extractLink(document, 'a.novae');
     const prevLink = extractLink(document, 'a.stare');
 
     const newRoot = document.createElement('html');
-    
-    newRoot.appendChild(createIFrame(mediaSrc));
-    newRoot.appendChild(createControls(prevLink, nextLink));
-    
-    document.replaceChild(newRoot, document.children[0]);
 
-    // TODO: validate if process completed successfully.
+    const frameWrapper = document.createElement('div');
+    frameWrapper.className = 'frame-wrapper';
+
+    const loadOriginal = createAnchor('', 'Original');
+    loadOriginal.addEventListener('click', e => {
+        e.preventDefault();
+        document.replaceChild(originalDocument, newRoot);
+    });
+
+    mediaSources.forEach(source => frameWrapper.appendChild(createIFrame(source)));
+    newRoot.appendChild(createControls(prevLink, nextLink, loadOriginal));
+    newRoot.appendChild(frameWrapper);
+    
+    document.replaceChild(newRoot, originalDocument);
     console.log('Source extraction done');
 });
 
-function extractSource(doc) {
-    const encodedMediaSrc = doc.getElementById('iframe_1').dataset.src;
-    const mediaSrc = atob(encodedMediaSrc);
+function extractSources(doc) {
+    const iframes = doc.querySelectorAll('iframe');
+    const sources = Array
+        .from(iframes)
+        .filter(node => node.id.startsWith('iframe') && node.dataset.src)
+        .map(node => atob(node.dataset.src));
 
-    return mediaSrc;
+    return sources;
 }
 
 function createIFrame(videoSrc) {
@@ -42,25 +57,30 @@ function extractLink(document, query) {
     return document.querySelector(query);
 }
 
-function createAnchor(nextLink, label) {
+function createAnchor(link, label) {
     const anchor = document.createElement('a');
     
-    anchor.setAttribute('href', nextLink);
-    anchor.setAttribute('style', 'margin-right: 20px;');
+    anchor.className = 'media-link';
+    anchor.setAttribute('href', link);
     anchor.innerText = label;
     
     return anchor;
 }
 
-function createControls(prevLink, nextLink) {
+function createControls(prevLink, nextLink, loadOriginal) {
     const anchorWrapper = document.createElement('div');
-   
+    anchorWrapper.className = 'anchor-wrapper';
+
     if (prevLink) {
-        anchorWrapper.appendChild(createAnchor(prevLink, 'Prev media source'));
+        anchorWrapper.appendChild(createAnchor(prevLink, '<'));
+    }
+
+    if (loadOriginal) {
+        anchorWrapper.appendChild(loadOriginal);
     }
 
     if (nextLink) {
-        anchorWrapper.appendChild(createAnchor(nextLink, 'Next media source'));
+        anchorWrapper.appendChild(createAnchor(nextLink, '>'));
     } 
 
     if(!prevLink && !nextLink) {
